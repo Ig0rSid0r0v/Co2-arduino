@@ -1,0 +1,61 @@
+int sensorIn = A4;
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#define SCREEN_WIDTH 128 // ширина OLED дисплея в пикселах
+#define SCREEN_HEIGHT 64 // высота OLED дисплея в пикселах
+// контакты, к которым подключен OLED дисплей по интерфейсу SPI (default case):
+#define OLED_MOSI   9
+#define OLED_CLK   10
+#define OLED_DC    11
+#define OLED_CS    12
+#define OLED_RESET 13
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
+  OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
+void setup(){
+  Serial.begin(9600);
+  // используем значение опорного напряжения по умолчанию
+  analogReference(DEFAULT);
+  display.begin(SSD1306_SWITCHCAPVCC);
+  display.clearDisplay();
+  display.display();
+}
+void loop(){
+  //Read voltage
+  int sensorValue = analogRead(sensorIn);
+  // преобразуем считанное с выхода АЦП значение в напряжение
+  float voltage = sensorValue*(5000/1024.0);
+  if(voltage == 0)
+  {
+    Serial.println("Fault");
+  }
+  else if(voltage < 400)
+  {
+    Serial.println("preheating");
+  }
+  else
+  {
+    int voltage_diference=voltage-400;
+    float concentration=voltage_diference*50.0/16.0;
+    // Print Voltage
+    Serial.print("voltage: ");
+    Serial.print(voltage);
+    Serial.println("mv");
+    //Print CO2 concentration
+    Serial.print("CO2 Concentration: ");
+    Serial.print(concentration);
+    Serial.println("ppm");
+    display.setTextSize(2);
+    display.setTextColor(WHITE);
+    display.setCursor(18,43);
+    display.println("CO2");
+    display.setCursor(63,43);
+    display.println("(PPM)");
+    display.setTextSize(2);
+    display.setCursor(28,5);
+    display.println(concentration);
+    display.display();
+    display.clearDisplay();
+  }
+  delay(2000);
+}
